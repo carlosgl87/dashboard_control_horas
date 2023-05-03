@@ -5,3 +5,4 @@ protobuf==3.20.1
 click==7.1.1
 boto3==1.24.12
 botocore==1.27.12
+openpyxl
