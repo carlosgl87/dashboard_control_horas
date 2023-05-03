@@ -59,9 +59,11 @@ for per in personas:
         lista_horas_camp.append(int(horas))
         lista_horas_camp_porc.append(int((horas/(40*4))*100))
     lista_proyectos = df[(df['Equipo']==per)]['Proyecto'].tolist()
-    lista_tipo_proyecto = df[(df['Equipo']==per)]['Tipo_Proyecto'].tolist()
-    tipo_proyecto = max(set(lista_tipo_proyecto), key=lista_tipo_proyecto.count)
-
+    lista_tipo_proyecto = list(set(df[(df['Equipo']==per)]['Tipo_Proyecto'].tolist()))
+    if len(lista_tipo_proyecto) > 1:
+        tipo_proyecto = 'Pared/Run'
+    else:
+        tipo_proyecto = lista_tipo_proyecto[0]
     df_resumen.loc[i] = [per,tipo_proyecto,len(lista_proyectos)]+lista_horas_camp
     df_resumen_porcentaje.loc[i] = [per,tipo_proyecto,len(lista_proyectos)]+lista_horas_camp_porc
     i = i + 1
