@@ -58,10 +58,15 @@ for per in personas:
         horas = horas*(1+incluir_incremento)
         lista_horas_camp.append(int(horas))
         lista_horas_camp_porc.append(int((horas/(40*4))*100))
-        lista_proyectos = df[(df['Equipo']==per)&(df['Tipo_Proyecto']=='Pared')]['Proyecto'].tolist()
+        lista_proyectos = df[(df['Equipo']==per)]['Proyecto'].tolist()
     #print([per]+lista_horas_camp)
-    df_resumen.loc[i] = [per,len(lista_proyectos)]+lista_horas_camp
-    df_resumen_porcentaje.loc[i] = [per,len(lista_proyectos)]+lista_horas_camp_porc
+
+    if len([s for s in lista_proyectos if 'run' in s.lower()]) == 0:
+        num_proyectos = 'Run'
+    else:
+        num_proyectos = len(lista_proyectos)
+    df_resumen.loc[i] = [per,num_proyectos]+lista_horas_camp
+    df_resumen_porcentaje.loc[i] = [per,num_proyectos]+lista_horas_camp_porc
     i = i + 1
 
 
