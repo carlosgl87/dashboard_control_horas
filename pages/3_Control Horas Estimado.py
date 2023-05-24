@@ -3,6 +3,8 @@ import streamlit as st
 from azure.cosmos import exceptions, CosmosClient, PartitionKey
 import json
 
+######################################################################
+
 def color_survived(val):
     color = '#fa8072' if val==0 else '#f2a400' if val <= 30 else '#fff68f' if val<=80 else '#21cc89'
     return f'background-color: {color}'
@@ -16,29 +18,48 @@ hide_table_row_index = """
             """
 st.markdown(hide_table_row_index, unsafe_allow_html=True)
 
+######################################################################
 
+######################################################################
 ## DATABASE
-# conectarnos a la instancia
 endpoint = "https://registrohoras.documents.azure.com:443/"
 key = 'i4Jsp0MGQdqQY4QQvhJKM7SIJ2856GrzPmycWQjJOgEWDS93o8zjLwA1neNtGXkcaRyLc2PbdXGfACDbb06FEg=='
 client = CosmosClient(endpoint, key)
 DATABASE_NAME = 'controlhoras'
 CONTAINER_NAME_PROYECTOS = 'Proyectos'
 CONTAINER_NAME_POTENCIALESPROYECTOS = 'PotencialesProyectos'
+CONTAINER_NAME_HORAS = 'RegistroHoras'
+CONTAINER_EQUIPO = 'Equipo'
 
 database = client.get_database_client(DATABASE_NAME)
 container_proy = database.get_container_client(CONTAINER_NAME_PROYECTOS)
 container_potproy = database.get_container_client(CONTAINER_NAME_POTENCIALESPROYECTOS)
+container_horas = database.get_container_client(CONTAINER_NAME_HORAS)
+container_equipo = database.get_container_client(CONTAINER_EQUIPO)
+######################################################################
+
+######################################################################
+## Cargar los datos del equipo y crear la lista de campañas
+item_list_equipo = list(container_equipo.read_all_items())
+df_equipo = pd.DataFrame(columns=['id','equipo','puesto','tipo_equipo','estado'])
+cont = 0
+for item in item_list_equipo:
+    df_equipo.loc[cont] = [item['id'],item['equipo'],item['puesto'],item['tipo_equipo'],item['estado']]
+    cont = cont + 1
+#df_equipo = pd.read_csv('data/equipo.csv',delimiter=';')
+personas = list(df_equipo['equipo'].unique())
+campanas = ['C4','C5','C6','C7','C8','C9','C10','C11','C12','C13']
+
+######################################################################
 
 ## Crear los Dataframes
 
-campanas = ['C4','C5','C6','C7','C8','C9','C10','C11','C12','C13']
 
 ## dataframe de estimados de proyectos 
 df_estimado_proyectos = pd.DataFrame(columns=['id','nombre','equipo','total_horas']+campanas)
-item_list = list(container_proy.read_all_items())
+item_list_proyectos = list(container_proy.read_all_items())
 cont = 0
-for item in item_list:
+for item in item_list_proyectos:
     proy_id = item['id']
     proy_nombre = item['nombre']
     lista_equipo = item['equipo']
@@ -55,7 +76,7 @@ for item in item_list:
 df_estimado_proyectos['total_horas'] = df_estimado_proyectos['total_horas'].map(int)
 for camp in campanas:
     df_estimado_proyectos[camp] = df_estimado_proyectos[camp].map(int)
-print(df_estimado_proyectos)
+#print(df_estimado_proyectos)
 
 ## dataframe de potenciales proyectos
 item_list = list(container_potproy.read_all_items())
@@ -70,39 +91,7 @@ for item in item_list:
         df_proyectos_potenciales.loc[cont] = [id_pot_proy,nombre_pot_proy,estado_pot_proy,equipo]
         cont = cont + 1
 
-print(df_proyectos_potenciales)
-
-df = pd.read_csv('./data/equipo_proyectos_horas_estimado.csv',delimiter=';')
-df_potencial = pd.read_csv('./data/potenciales_proyectos.csv',delimiter=';')
-
-#df1 = load_data()
-
-#if 'exp_data_frame' not in st.session_state:
-#    st.session_state.exp_data_frame = st.experimental_data_editor(df_potencial)
-#    output_df = st.session_state.exp_data_frame
-
-#else:
-#    output_df = st.experimental_data_editor(
-#        st.session_state.exp_data_frame
-#        ) 
-
-#submit_button = st.button("Submit")
-#if submit_button:
-
-# if 'exp_data_frame' not in st.session_state: 
-#     st.session_state.exp_data_frame = st.experimental_data_editor(df_potencial)
-#     output_df = st.session_state.exp_data_frame 
-# else: 
-#     output_df = st.experimental_data_editor(df_potencial)
-
-#output_df = st.experimental_data_editor(df_potencial)
-#output_df.to_csv("potenciales_proyectos.csv", index = False)
-
-
-#edited_df = st.experimental_data_editor(df_potencial,num_rows='dynamic') # 👈 An editable dataframe
-#submit_button = st.button("Submit")
-#if submit_button:
-#    df_potencial.update(edited_df)
+#print(df_proyectos_potenciales)
 
 st.markdown('# GENERAL')
 
@@ -129,8 +118,6 @@ if consultores == 'Si':
 else:
     tipo_equipo = ['Staff']
 
-df_equipo = pd.read_csv('data/equipo.csv',delimiter=';')
-personas = list(df_equipo[df_equipo['Tipo_Equipo'].isin(tipo_equipo)]['Equipo'].unique())
 campanas = ['C4','C5','C6','C7','C8','C9','C10','C11','C12','C13']
 
 df_resumen = pd.DataFrame(columns=['Persona','Tipo Proyecto','#Proyectos']+campanas)
@@ -154,6 +141,7 @@ for per in personas:
         else:
             lista_tipo_proyecto.append('Pared')
     lista_tipo_proyecto = list(set(lista_tipo_proyecto))
+    #print(lista_tipo_proyecto,len(lista_tipo_proyecto))
     if len(lista_tipo_proyecto) > 1:
         tipo_proyecto = 'Pared/Run'
     else:
@@ -190,4 +178,4 @@ st.markdown('## Proyectos Actuales (Pared)')
 st.table(df_persona)
 
 st.markdown('## Proyectos Potenciales')
-st.table(df_proyectos_potenciales[df_proyectos_potenciales['equipo']==option][['nombre','estado']])
+st.table(df_proyectos_potenciales[(df_proyectos_potenciales['equipo']==option)&(df_proyectos_potenciales['estado'].isin(['Idea','Estimar']))][['nombre','estado']])
