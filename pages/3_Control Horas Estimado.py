@@ -47,11 +47,9 @@ for item in item_list_equipo:
     df_equipo.loc[cont] = [item['id'],item['equipo'],item['puesto'],item['tipo_equipo'],item['estado']]
     cont = cont + 1
 #df_equipo = pd.read_csv('data/equipo.csv',delimiter=';')
-personas = list(df_equipo['equipo'].unique())
 campanas = ['C4','C5','C6','C7','C8','C9','C10','C11','C12','C13']
 
 ######################################################################
-
 ## Crear los Dataframes
 
 
@@ -118,6 +116,7 @@ if consultores == 'Si':
 else:
     tipo_equipo = ['Staff']
 
+personas = list(df_equipo[df_equipo['tipo_equipo'].isin(tipo_equipo)]['equipo'].unique())
 campanas = ['C4','C5','C6','C7','C8','C9','C10','C11','C12','C13']
 
 df_resumen = pd.DataFrame(columns=['Persona','Tipo Proyecto','#Proyectos']+campanas)
