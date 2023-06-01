@@ -1,7 +1,7 @@
 import streamlit as st
 st.set_page_config(
-    page_title="Home",
-    page_icon="👋",
+    page_title="Control Proyectos",
+    page_icon="🧑‍🤝‍🧑",
 )
 st.markdown("## Aplicacion para la gestión de proyectos! 👋")
 st.markdown(
